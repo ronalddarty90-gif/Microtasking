@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Micro-Task Marketplace Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-extrabold mb-4">Micro-Task Marketplace Hub</h1>
+    <p class="text-gray-600 mb-6">Auto-updated list of paid micro-tasks.</p>
+
+    <input id="search" placeholder="Search..." class="p-3 border rounded w-full mb-3" />
+
+    <div id="tasks" class="grid gap-4"></div>
+  </div>
+
+  <script>
+    const SHEET_ID = "YOUR_GOOGLE_SHEET_ID_HERE";
+    const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+    function parseGViz(text) {
+      const start = text.indexOf("({");
+      const end = text.lastIndexOf("})");
+      const json = JSON.parse(text.substring(start + 1, end + 1));
+      const cols = json.table.cols.map(c => c.label.toLowerCase());
+      return json.table.rows.map(r => {
+        let obj = {};
+        r.c.forEach((cell, i) => obj[cols[i]] = cell ? cell.v : "");
+        return obj;
+      });
+    }
+
+    async function loadTasks() {
+      const res = await fetch(URL);
+      const txt = await res.text();
+      const rows = parseGViz(txt);
+
+      const container = document.getElementById("tasks");
+      container.innerHTML = "";
+
+      rows.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "p-4 bg-white border rounded shadow";
+
+        div.innerHTML = `
+          <h2 class="font-bold text-lg">${t.title}</h2>
+          <p class="text-sm text-gray-700 mt-1">${t.description}</p>
+          <div class="text-sm text-gray-600 mt-2">
+            Reward: <b>${t.reward}</b> — Time: ${t.time_min} min
+          </div>
+          <button onclick="window.open('${t.affiliate || t.url}', '_blank');"
+            class="mt-3 px-3 py-2 bg-blue-600 text-white rounded">
+            Go to Task
+          </button>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById("search").addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        [...container.children].forEach(card => {
+          card.style.display = card.innerText.toLowerCase().includes(q) ? "" : "none";
+        });
+      });
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>

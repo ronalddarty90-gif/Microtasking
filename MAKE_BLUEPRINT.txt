@@ -1,0 +1,9 @@
+Make.com Scenario Blueprint (textual)
+- Name: Auto-Update Micro Task Feed
+- Modules:
+  1) Scheduler (every 2 hours)
+  2) HTTP GET (offer pages) - parse HTML
+  3) HTML Parser / CSS selectors to extract title, description, payout
+  4) Formatter - create id via uuid(), clean text
+  5) Google Sheets - Add Row (map fields)
+  6) Filter: reward > 0
